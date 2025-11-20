@@ -13,6 +13,9 @@ export interface Listing {
   images: ListingImage[];
   createdAt: string;
   updatedAt: string;
+  user?: User;
+  category?: Category;
+  customFields?: Record<string, any>;
 }
 
 export interface ListingImage {

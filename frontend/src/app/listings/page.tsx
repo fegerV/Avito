@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import api, { getCachedData, setCachedData } from '@/lib/api';
 import { Listing } from '@/types';
+import { useDebouncedValue } from '@/hooks';
 
 export default function ListingsPage() {
   const [listings, setListings] = useState<Listing[]>([]);
@@ -13,27 +14,45 @@ export default function ListingsPage() {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
 
-  useEffect(() => {
-    fetchListings();
-  }, [search, region, minPrice, maxPrice]);
+  const debouncedSearch = useDebouncedValue(search, 500);
+  const debouncedRegion = useDebouncedValue(region, 500);
+  const debouncedMinPrice = useDebouncedValue(minPrice, 500);
+  const debouncedMaxPrice = useDebouncedValue(maxPrice, 500);
 
   const fetchListings = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (search) params.append('query', search);
-      if (region) params.append('region', region);
-      if (minPrice) params.append('minPrice', minPrice);
-      if (maxPrice) params.append('maxPrice', maxPrice);
+      if (debouncedSearch) params.append('query', debouncedSearch);
+      if (debouncedRegion) params.append('region', debouncedRegion);
+      if (debouncedMinPrice) params.append('minPrice', debouncedMinPrice);
+      if (debouncedMaxPrice) params.append('maxPrice', debouncedMaxPrice);
 
-      const response = await api.get(`/listings/search?${params.toString()}`);
-      setListings(response.data.listings);
+      const queryString = params.toString();
+      const cacheKey = `listings-search-${queryString}`;
+
+      const cachedData = getCachedData(cacheKey);
+      if (cachedData) {
+        setListings(cachedData);
+        setLoading(false);
+        return;
+      }
+
+      const response = await api.get(`/listings/search?${queryString}`);
+      const fetchedListings = response.data.listings;
+      setListings(fetchedListings);
+      setCachedData(cacheKey, fetchedListings);
     } catch (error) {
       console.error('Failed to fetch listings:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchListings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, debouncedRegion, debouncedMinPrice, debouncedMaxPrice]);
 
   return (
     <main className="min-h-screen bg-gray-50">
