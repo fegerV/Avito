@@ -1,0 +1,41 @@
+# Node.js
+node_modules
+npm-debug.log
+.DS_Store
+.env
+.cache
+.idea
+.nuxt
+.next
+coverage
+.env.production
+.env.development
+
+# logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Lock files
+package-lock.json
+yarn-lock
+turbo-lock
+
+# Build directories
+backend/dist
+frontend/.next
+frontend/out
+
+# Temp files
+*.tmp
+*.swp
+
+# Docker
+*.pid
